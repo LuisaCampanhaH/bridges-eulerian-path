@@ -46,9 +46,9 @@ bridges-eulerian-path/
 
 | Integrante | Parte | Arquivos | Seção do relatório |
 |---|---|---|---|
-| **A** | Estrutura do grafo, conectividade e método naïve | `Grafo`, `DetectorPontes`, `PontesNaive` | Introdução e definições |
-| **B** | Tarjan, verificação euleriana e Fleury | `PontesTarjan`, `Fleury` | Implementação e complexidade |
-| **C** | Geradores de grafos e experimentos | `GeradorGrafos`, `Experimentos` | Experimentos e resultados |
+| **Luisa Campanha** | Estrutura do grafo, conectividade e método naïve | `Grafo`, `DetectorPontes`, `PontesNaive` | Introdução e definições |
+| **Thayná Cota** | Tarjan, verificação euleriana e Fleury | `PontesTarjan`, `Fleury` | Implementação e complexidade |
+| **Luan Oliveira** | Geradores de grafos e experimentos | `GeradorGrafos`, `Experimentos` | Experimentos e resultados |
 | **Todos** | Conclusão e revisão | — | Conclusão |
 
 > ⚠️ **Cada integrante precisa entregar o trabalho.** Quem não entregar leva zero, mesmo que os outros entreguem. Os fontes em TeX também são obrigatórios.
@@ -156,7 +156,7 @@ for (int i = g.inicio[v]; i < g.inicio[v + 1]; i++) {
 
 ---
 
-## ✅ Testes realizados (parte A)
+## ✅ Testes realizados (Luisa Campanha)
 
 - **Grafo pequeno conferido à mão:** encontrou exatamente as pontes 3–4 e 6–7.
 - **200 grafos aleatórios** (de 2 a 60 vértices, incluindo grafos desconexos), comparados com a função `bridges` da biblioteca networkx do Python: **0 diferenças**, tanto nas pontes quanto na conectividade.

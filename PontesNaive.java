@@ -45,7 +45,7 @@ public class PontesNaive implements DetectorPontes {
         return resultado;
     }
 
-    // teste da parte da Pessoa A: le um grafo e lista as pontes
+    // teste da parte da Luisa Campanha: le um grafo e lista as pontes
     public static void main(String[] args) throws IOException {
         Scanner teclado = new Scanner(System.in);
 

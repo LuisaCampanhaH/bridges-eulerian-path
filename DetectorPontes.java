@@ -1,6 +1,6 @@
 /*
  * Interface comum das duas estrategias de identificacao de pontes.
- * PontesNaive (Pessoa A) e PontesTarjan (Pessoa B) implementam estes metodos,
+ * PontesNaive (Luisa Campanha) e PontesTarjan (Thayna Cota) implementam estes metodos,
  * e o Fleury recebe um DetectorPontes sem precisar saber qual e.
  */
 public interface DetectorPontes {

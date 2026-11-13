@@ -1,4 +1,57 @@
-% Secao de introducao e definicoes (Pessoa A): ponte, caminho euleriano, grafo semi-euleriano.
+% Secao de introducao e definicoes (Luisa Campanha). Rascunho; revisar.
 \section{Introdução}
 
-% A FAZER (Pessoa A)
+Algoritmos baseados em grafos aparecem na solução de problemas de diversas áreas, como redes de computadores, roteamento e logística. Dois problemas clássicos da área são a identificação de pontes, isto é, de arestas cuja remoção desconecta o grafo, e a busca por caminhos eulerianos, que percorrem todas as arestas exatamente uma vez. Os dois estão ligados: o algoritmo de Fleury, de 1883, constrói um caminho euleriano evitando atravessar pontes sempre que possível e, por isso, precisa responder repetidamente se uma aresta é ponte.
+
+Este trabalho implementa duas estratégias para identificar pontes, um método ingênuo, que testa a conectividade após a remoção de cada aresta, e o método de Tarjan~\cite{tarjan1974}, baseado em uma única busca em profundidade, e usa cada uma delas dentro do algoritmo de Fleury. As estratégias são comparadas pelo tempo médio de execução em grafos aleatórios eulerianos, semi-eulerianos e não eulerianos, com 100, 1.000, 10.000 e 100.000 vértices.
+
+\subsection{Definições}
+
+Considera-se um grafo simples não-direcionado $G = (V, E)$, em que $V$ é o conjunto de vértices e $E$ o conjunto de arestas, sem laços e sem arestas paralelas. Ao longo do texto, $n = |V|$ e $m = |E|$.
+
+\begin{itemize}
+  \item \textbf{Grau:} o grau $d(v)$ de um vértice $v$ é o número de arestas incidentes a ele. Como cada aresta contribui com 1 para o grau de cada uma das suas extremidades, $\sum_{v \in V} d(v) = 2m$, e portanto todo grafo tem uma quantidade par de vértices de grau ímpar.
+  \item \textbf{Caminho e conexidade:} um caminho é uma sequência de vértices em que vértices consecutivos são ligados por arestas. O grafo é conexo se existe caminho entre quaisquer dois de seus vértices; uma componente conexa é um subgrafo conexo maximal.
+  \item \textbf{Ponte:} uma aresta $e$ é ponte se a sua remoção aumenta o número de componentes conexas do grafo. Equivalentemente, a aresta $\{u, v\}$ é ponte se, e somente se, depois de removida não existe mais caminho entre $u$ e $v$, ou seja, se ela não pertence a nenhum ciclo.
+  \item \textbf{Caminho e ciclo eulerianos:} um caminho euleriano é um caminho que usa cada aresta do grafo exatamente uma vez. Se ele começa e termina no mesmo vértice, é um ciclo euleriano.
+  \item \textbf{Grafo euleriano e semi-euleriano:} um grafo é euleriano se possui um ciclo euleriano, e semi-euleriano se possui um caminho euleriano, mas nenhum ciclo euleriano.
+\end{itemize}
+
+A existência de caminhos eulerianos é caracterizada pelo grau dos vértices, resultado que remonta a Euler e ao problema das pontes de Königsberg. Seja $G$ um grafo em que todas as arestas pertencem a uma mesma componente conexa (vértices isolados não interferem, pois não precisam ser visitados). Então:
+
+\begin{itemize}
+  \item $G$ é euleriano se, e somente se, todos os vértices têm grau par;
+  \item $G$ é semi-euleriano se, e somente se, exatamente dois vértices têm grau ímpar; nesse caso, todo caminho euleriano começa em um deles e termina no outro;
+  \item se $G$ tem mais de dois vértices de grau ímpar, ou se as arestas estão em mais de uma componente, não existe caminho euleriano.
+\end{itemize}
+
+A Figura~\ref{fig:exemplo} mostra o grafo usado como exemplo no enunciado do trabalho. A aresta $\{F, G\}$ é a sua única ponte: removê-la separa os vértices $G$, $H$ e $I$ do restante do grafo, enquanto todas as outras arestas pertencem a algum ciclo. Os vértices $A$, $E$, $F$ e $G$ têm grau ímpar, e portanto esse grafo não possui caminho euleriano.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+      vertice/.style={circle, draw, minimum size=6mm, inner sep=0pt, font=\small},
+      ponte/.style={very thick, dashed},
+    ]
+    \node[vertice] (A) at (0, 0)     {A};
+    \node[vertice] (E) at (2.2, 0)   {E};
+    \node[vertice] (B) at (1.1, 1.1) {B};
+    \node[vertice] (C) at (2.6, 1.1) {C};
+    \node[vertice] (D) at (1.1, 2.4) {D};
+    \node[vertice] (F) at (4.1, 1.1) {F};
+    \node[vertice] (G) at (5.6, 1.1) {G};
+    \node[vertice] (H) at (7.0, 1.1) {H};
+    \node[vertice] (I) at (7.0, 2.4) {I};
+
+    \draw (A) -- (B) (A) -- (E) (B) -- (E) (C) -- (E)
+          (B) -- (C) (B) -- (D) (C) -- (D) (C) -- (F)
+          (G) -- (H) (G) -- (I) (H) -- (I);
+    \draw (A) to[bend left=40] (D);
+    \draw (D) to[bend left=35] (F);
+    \draw[ponte] (F) -- (G);
+  \end{tikzpicture}
+  \caption{Grafo de exemplo do enunciado. A aresta tracejada $\{F, G\}$ é a única ponte.}
+  \label{fig:exemplo}
+\end{figure}
+
+O restante do relatório está organizado da seguinte forma. A seção de Implementação descreve as estruturas de dados, os dois métodos de identificação de pontes, a verificação euleriana e o algoritmo de Fleury, com a complexidade de cada um. As seções de Experimentos e de Resultados descrevem a geração dos grafos e a metodologia de medição e apresentam e discutem os tempos obtidos. Por fim, a Conclusão resume os resultados e aponta possíveis extensões do trabalho.
