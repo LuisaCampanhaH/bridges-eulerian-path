@@ -25,19 +25,17 @@ Os experimentos medem o **tempo médio** das duas estratégias em grafos aleató
 ## 📁 Estrutura do repositório
 
 ```
-tp01-pontes-euler/
+bridges-eulerian-path/
 ├── README.md
-├── src/
-│   ├── Grafo.java            ✅ estrutura do grafo + conectividade (BFS)
-│   ├── DetectorPontes.java   ✅ interface comum das duas estratégias
-│   ├── PontesNaive.java      ✅ método naïve
-│   ├── PontesTarjan.java     ⏳ método de Tarjan
-│   ├── Fleury.java           ⏳ caminho euleriano (recebe um DetectorPontes)
-│   ├── GeradorGrafos.java    ⏳ grafos aleatórios (euleriano / semi / não euleriano)
-│   └── Experimentos.java     ⏳ execução, médias de tempo e saída em CSV
-├── grafos/                   arquivos de grafos para testes
-├── resultados/               CSVs e gráficos gerados pelos experimentos
-└── relatorio/                relatório em TeX (.tex + PDF)
+├── Grafo.java            ✅ estrutura do grafo + conectividade (BFS)
+├── DetectorPontes.java   ✅ interface comum das duas estratégias
+├── PontesNaive.java      ✅ método naïve
+├── PontesTarjan.java     ✅ método de Tarjan
+├── Fleury.java           ✅ caminho euleriano (recebe um DetectorPontes)
+├── GeradorGrafos.java    ✅ grafos aleatórios (euleriano / semi / não euleriano)
+├── Experimentos.java     ✅ execução, médias de tempo e saída em CSV
+├── resultados/           CSVs gerados pelos experimentos
+└── relatorio/            relatório em TeX (main.tex + seções + dados/ para os gráficos)
 ```
 
 ✅ pronto · ⏳ a fazer
@@ -82,10 +80,27 @@ Esse grafo é formado por dois triângulos (1-2-3 e 4-5-6) ligados pela aresta *
 Requisito: **Java 17 ou mais recente**.
 
 ```bash
-cd src
-javac *.java
-java PontesNaive
+javac -d build *.java
+java -cp build PontesNaive      # pontes pelo naïve
+java -cp build PontesTarjan     # pontes pelo Tarjan
+java -cp build Fleury           # caminho euleriano (escolhe a estratégia)
+java -cp build GeradorGrafos    # autoteste do gerador
 ```
+
+### Experimentos
+
+```bash
+java -cp build Experimentos                 # tudo: 100, 1.000, 10.000 e 100.000 vértices, timeout de 30 min
+java -cp build Experimentos 100,1000 60     # só alguns tamanhos, timeout de 60 s (teste rápido)
+java -cp build Experimentos resumir         # refaz os resumos a partir de resultados/bruto.csv
+```
+
+Cada execução roda em um processo separado, e o timeout é aplicado matando esse processo. Os resultados ficam em:
+
+- `resultados/bruto.csv`: uma linha por execução (`medida,n,m,tipo,estrategia,repeticao,semente,tempo_ms,status`);
+- `resultados/<medida>_<tipo>.csv`: média e desvio padrão por `n`, com o naïve e o Tarjan lado a lado. Esses arquivos vão para `relatorio/dados/`, de onde os gráficos do relatório (pgfplots) leem os dados.
+
+Medidas: `fleury` (caminho euleriano, nos 3 tipos) e `pontes` (`encontrarPontes` sozinho, em grafos não eulerianos).
 
 O programa pede o nome do arquivo do grafo e mostra:
 
@@ -154,7 +169,20 @@ for (int i = g.inicio[v]; i < g.inicio[v + 1]; i++) {
 | 10.000 | 19.999 | ~2,5 s |
 | 100.000 | 199.999 | ~6 min |
 
-> ⚠️ O Fleury faz testes de ponte **a cada passo**, então o **Fleury com o naïve não deve terminar em tempo razoável com 100.000 vértices**. Os experimentos precisam de **timeout**, e "não concluiu em X min" entra no relatório como resultado.
+---
+
+## 📊 Resultados dos experimentos
+
+Rodada completa: 224 execuções, todas concluídas e corretas, sem nenhum timeout (limite de 30 min). Tempos médios com 100.000 vértices:
+
+| Medida | Naïve | Tarjan |
+|---|---|---|
+| Fleury, grafo euleriano | ~3,0 min | ~22,5 min |
+| Fleury, grafo semi-euleriano | ~2,7 min | ~18,1 min |
+| Fleury, grafo não euleriano | 19 ms | 20 ms |
+| Todas as pontes (`encontrarPontes`) | ~4,1 min | 42 ms |
+
+Dentro do Fleury, o **naïve é mais rápido** que o Tarjan, de 2,8 a 7,5 vezes: o teste do naïve para assim que encontra a outra ponta da aresta, enquanto o Tarjan percorre a componente inteira a cada teste. Já para encontrar todas as pontes de uma vez, o Tarjan é linear e foi quase 6.000 vezes mais rápido. Os detalhes estão em `resultados/` e na seção de experimentos do relatório.
 
 ---
 

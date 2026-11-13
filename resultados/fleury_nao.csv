@@ -1,0 +1,5 @@
+n,m,naive_ms,naive_desvio,naive_ok,naive_timeouts,naive_erros,tarjan_ms,tarjan_desvio,tarjan_ok,tarjan_timeouts,tarjan_erros
+100,199,0.034,0.015,10,0,0,0.043,0.045,10,0,0
+1000,2006,0.285,0.096,10,0,0,0.230,0.031,10,0,0
+10000,20048,3.071,0.323,5,0,0,3.099,0.299,5,0,0
+100000,200420,18.769,0.135,3,0,0,19.511,0.425,3,0,0

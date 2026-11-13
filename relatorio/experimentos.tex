@@ -1,0 +1,121 @@
+% Secao de experimentos e resultados (Pessoa C).
+% Os graficos leem os resumos gerados por Experimentos.java (copiados de ../resultados/ para dados/).
+
+% #1: arquivo em dados/ sem extensao; #2: titulo do grafico
+\newcommand{\graficoTempo}[2]{%
+  \begin{tikzpicture}
+    \begin{loglogaxis}[
+        width=0.48\textwidth,
+        title={#2},
+        xlabel={Vértices ($n$)},
+        ylabel={Tempo médio (ms)},
+        grid=major,
+        legend pos=north west,
+        legend style={font=\small},
+        unbounded coords=discard,
+        table/col sep=comma,
+      ]
+      \addplot+[mark=*] table[x=n, y=naive_ms] {dados/#1.csv};
+      \addplot+[mark=square*] table[x=n, y=tarjan_ms] {dados/#1.csv};
+      \legend{Ingênuo, Tarjan}
+    \end{loglogaxis}
+  \end{tikzpicture}%
+}
+
+\section{Experimentos}
+
+\subsection{Geração dos grafos}
+
+Os grafos de teste são gerados pela classe \texttt{GeradorGrafos} e são sempre conexos, simples e esparsos, com grau médio próximo de 4. Grafos densos foram evitados porque, com $n = 100.000$ vértices, o número de arestas tornaria os experimentos inviáveis. A geração tem três etapas:
+
+\begin{enumerate}
+  \item \textbf{Árvore aleatória:} cada vértice $i \geq 2$ é ligado a um vértice $j < i$ sorteado. Isso garante que o grafo é conexo e não tem vértices isolados.
+  \item \textbf{Arestas aleatórias:} pares de vértices são sorteados até o grafo ter cerca de $1{,}75\,n$ arestas. Um conjunto de hash com o par $(\min(u,v), \max(u,v))$ descarta laços e arestas repetidas.
+  \item \textbf{Ajuste de paridade:} os vértices de grau ímpar, que são sempre em quantidade par, são ligados dois a dois. Se a aresta $\{u, v\}$ já existe, são adicionadas as arestas $\{u, w\}$ e $\{w, v\}$, com $w$ sorteado; o grau de $w$ aumenta em 2 e sua paridade não muda. São deixados sem par 0 vértices ímpares no grafo euleriano, 2 no semi-euleriano e 4 no não euleriano. Essa etapa acrescenta cerca de $n/4$ arestas, fechando em aproximadamente $2n$ arestas.
+\end{enumerate}
+
+Como o ajuste de paridade apenas adiciona arestas, o grafo continua conexo e simples. O tipo de cada grafo gerado foi conferido com o método \texttt{classificar} da classe \texttt{Fleury} para os quatro tamanhos. A geração é determinística a partir de uma semente, o que permite executar as duas estratégias sobre exatamente o mesmo grafo.
+
+\subsection{Metodologia}
+
+Foram feitas duas medidas, cada uma com as duas estratégias de identificação de pontes:
+
+\begin{itemize}
+  \item \textbf{Fleury:} tempo de \texttt{Fleury.encontrarCaminho}, nos grafos eulerianos, semi-eulerianos e não eulerianos;
+  \item \textbf{Todas as pontes:} tempo de \texttt{encontrarPontes}, que identifica todas as pontes de uma só vez, nos grafos não eulerianos. Essa medida não depende do tipo do grafo e serve para comparar as estratégias fora do Fleury.
+\end{itemize}
+
+Os tamanhos usados foram $n \in \{100,\ 1.000,\ 10.000,\ 100.000\}$. Cada combinação de tamanho, tipo e estratégia foi repetida 10 vezes para $n \leq 1.000$, 5 vezes para $n = 10.000$ e 3 vezes para $n = 100.000$, cada repetição com um grafo diferente. O tempo reportado é a média das repetições, acompanhada do desvio padrão amostral.
+
+Cada execução roda em um processo Java separado, criado pela classe \texttt{Experimentos}. Isso tem três vantagens: o limite de tempo de 30 minutos é aplicado simplesmente encerrando o processo, sem alterar o código do Fleury; uma execução não interfere na memória nem na compilação \emph{just-in-time} (JIT) da seguinte; e uma falha em uma execução não interrompe as demais. Execuções que excedem o limite são registradas como ``não concluiu em 30 minutos''. Apenas o algoritmo é medido, com \texttt{System.nanoTime()}; a geração do grafo fica fora da medição. Para $n \leq 1.000$, em que o tempo é de poucos milissegundos, uma execução descartada antes da medição aquece o compilador JIT. Além do tempo, cada execução confere o resultado: o caminho do Fleury deve existir nos grafos eulerianos e semi-eulerianos, ter $m + 1$ vértices, e não existir nos não eulerianos.
+
+Os experimentos foram executados em um notebook com processador Intel Core i5-8265U (1,6~GHz, 4 núcleos e 8 \emph{threads}) e 16~GB de memória, com Ubuntu 24.04 e OpenJDK 17.0.21. As execuções foram feitas uma de cada vez.
+
+\section{Resultados}
+
+As 224 execuções terminaram dentro do limite de 30 minutos e todas produziram resultado correto; a rodada completa levou cerca de 2 horas e 33 minutos. As Tabelas~\ref{tab:fleury} e~\ref{tab:pontes} trazem as médias e os desvios padrão, e a Figura~\ref{fig:tempos} mostra os mesmos dados em escala logarítmica nos dois eixos. Nessa escala, uma reta de inclinação 1 indica crescimento linear e uma reta de inclinação 2, crescimento quadrático.
+
+\begin{table}[H]
+  \centering
+  \caption{Tempo médio (ms) do algoritmo de Fleury, com o desvio padrão. A razão é o tempo com Tarjan dividido pelo tempo com o método ingênuo.}
+  \label{tab:fleury}
+  \begin{tabular}{llrrrr}
+    \toprule
+    Tipo & $n$ & $m$ & Ingênuo & Tarjan & Razão \\
+    \midrule
+    Euleriano      & 100     & 201     & $0{,}67 \pm 0{,}16$        & $1{,}90 \pm 1{,}49$       & 2,8 \\
+                   & 1.000   & 2.004   & $14{,}3 \pm 2{,}3$         & $46{,}3 \pm 8{,}3$        & 3,2 \\
+                   & 10.000  & 20.030  & $1.320{,}6 \pm 72{,}9$     & $7.155{,}9 \pm 464{,}7$   & 5,4 \\
+                   & 100.000 & 200.461 & $179.154 \pm 18.947$       & $1.347.061 \pm 103.699$   & 7,5 \\
+    \midrule
+    Semi-euleriano & 100     & 200     & $0{,}60 \pm 0{,}08$        & $2{,}05 \pm 1{,}57$       & 3,4 \\
+                   & 1.000   & 2.000   & $13{,}2 \pm 1{,}5$         & $40{,}1 \pm 4{,}9$        & 3,0 \\
+                   & 10.000  & 20.039  & $1.347{,}1 \pm 166{,}3$    & $6.848{,}5 \pm 356{,}6$   & 5,1 \\
+                   & 100.000 & 200.419 & $164.403 \pm 26.302$       & $1.087.770 \pm 50.136$    & 6,6 \\
+    \midrule
+    Não euleriano  & 100     & 199     & $0{,}034 \pm 0{,}015$      & $0{,}043 \pm 0{,}045$     & --- \\
+                   & 1.000   & 2.006   & $0{,}29 \pm 0{,}10$        & $0{,}23 \pm 0{,}03$       & --- \\
+                   & 10.000  & 20.048  & $3{,}07 \pm 0{,}32$        & $3{,}10 \pm 0{,}30$       & --- \\
+                   & 100.000 & 200.420 & $18{,}8 \pm 0{,}1$         & $19{,}5 \pm 0{,}4$        & --- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{Tempo médio (ms) para encontrar todas as pontes (\texttt{encontrarPontes}), com o desvio padrão. A razão é o tempo do método ingênuo dividido pelo tempo do método de Tarjan.}
+  \label{tab:pontes}
+  \begin{tabular}{rrrrr}
+    \toprule
+    $n$ & $m$ & Ingênuo & Tarjan & Razão \\
+    \midrule
+    100     & 199    & $0{,}43 \pm 0{,}10$       & $0{,}07 \pm 0{,}09$ & 5,9 \\
+    1.000   & 2.006  & $16{,}7 \pm 1{,}1$        & $0{,}58 \pm 0{,}29$ & 29 \\
+    10.000  & 20.048 & $1.895{,}9 \pm 11{,}0$    & $6{,}2 \pm 3{,}4$   & 307 \\
+    100.000 & 200.420 & $244.132 \pm 1.628$     & $42{,}0 \pm 4{,}7$  & 5.818 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \graficoTempo{fleury_euleriano}{Fleury, grafos eulerianos}\hfill
+  \graficoTempo{fleury_semi}{Fleury, grafos semi-eulerianos}\\[1em]
+  \graficoTempo{pontes_nao}{Todas as pontes}
+  \caption{Tempo médio em função do número de vértices, em escala log-log.}
+  \label{fig:tempos}
+\end{figure}
+
+\subsection{Algoritmo de Fleury}
+
+Nos grafos eulerianos e semi-eulerianos, o algoritmo de Fleury foi mais rápido com o método ingênuo do que com o método de Tarjan em todos os tamanhos, de 2,8 a 7,5 vezes. Com 100.000 vértices, o caminho nos grafos eulerianos levou em média cerca de 3 minutos com o método ingênuo e 22 minutos com o método de Tarjan; nos semi-eulerianos, cerca de 3 e 18 minutos. Esse resultado confirma a análise da Seção de Implementação: dentro do Fleury, as duas estratégias custam $O(V + E)$ por teste de ponte, e a diferença está nas constantes. O teste ingênuo interrompe a busca em largura assim que alcança a outra extremidade da aresta, o que acontece cedo quando a aresta está em um ciclo curto, que é o caso mais comum. O método de Tarjan, por sua vez, sempre percorre a componente inteira, pois só conhece o valor $low$ de um vértice depois de visitar toda a sua subárvore. A razão entre as estratégias cresce com $n$ justamente porque a componente percorrida pelo Tarjan cresce, enquanto a busca do método ingênuo continua terminando cedo na maior parte dos testes.
+
+Os dois casos crescem de forma aproximadamente quadrática. Nos grafos eulerianos, de 1.000 para 10.000 vértices o tempo aumentou cerca de 92 vezes com o método ingênuo e 155 vezes com o método de Tarjan, perto das 100 vezes esperadas para a complexidade $O(E \cdot (V + E))$ com $E \approx 2V$. De 10.000 para 100.000 vértices, os aumentos foram de cerca de 136 e 188 vezes, um pouco acima do quadrático. Uma explicação provável é a memória: com 100.000 vértices, os vetores do grafo e das buscas passam a ocupar alguns megabytes, mais do que cabe na memória \emph{cache} do processador, e cada acesso fica mais lento. Os grafos eulerianos e semi-eulerianos tiveram tempos próximos, como esperado, já que a diferença entre eles é de poucas arestas.
+
+Nos grafos não eulerianos, o Fleury termina logo após a verificação de paridade e de conectividade, sem nenhum teste de ponte. Por isso, o tempo é praticamente o mesmo para as duas estratégias, menos de 20~ms mesmo com 100.000 vértices, e cresce no máximo de forma linear, como esperado para uma verificação em $O(V + E)$.
+
+\subsection{Identificação de todas as pontes}
+
+Fora do Fleury, a situação se inverte. Para encontrar todas as pontes de uma só vez, o método de Tarjan faz uma única busca em profundidade e cresceu de forma aproximadamente linear: cerca de 11 vezes de 1.000 para 10.000 vértices e 7 vezes de 10.000 para 100.000. O método ingênuo faz uma busca para cada aresta e cresceu cerca de 113 e 129 vezes nos mesmos intervalos, compatível com $O(E \cdot (V + E))$. Com 100.000 vértices, o método de Tarjan encontrou todas as pontes em 42~ms, enquanto o método ingênuo levou cerca de 4 minutos, uma diferença de quase 6.000 vezes.
+
+Os dois experimentos juntos mostram que a vantagem assintótica do método de Tarjan depende de as pontes serem calculadas uma vez para um grafo fixo. No Fleury, o grafo muda a cada aresta removida e cada pergunta exige uma nova busca, de modo que essa vantagem desaparece e a interrupção antecipada do teste ingênuo passa a ser decisiva.
