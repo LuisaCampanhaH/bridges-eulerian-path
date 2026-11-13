@@ -1,0 +1,8 @@
+build/
+*.class
+relatorio/*.aux
+relatorio/*.log
+relatorio/*.out
+relatorio/*.bbl
+relatorio/*.blg
+relatorio.zip

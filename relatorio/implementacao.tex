@@ -1,0 +1,86 @@
+% Secao de implementacao e complexidade (Pessoa B).
+% Usa \cite{tarjan1974}. Entrada para o arquivo .bib do projeto:
+%
+% @article{tarjan1974,
+%   author  = {Tarjan, Robert Endre},
+%   title   = {A note on finding the bridges of a graph},
+%   journal = {Information Processing Letters},
+%   volume  = {2},
+%   number  = {6},
+%   pages   = {160--161},
+%   year    = {1974},
+%   doi     = {10.1016/0020-0190(74)90003-9}
+% }
+
+\section{Implementação}
+
+Os algoritmos foram implementados em Java e usam a classe \texttt{Grafo}, que guarda as listas de adjacência em vetores e remove uma aresta em $O(1)$, apenas marcando o seu identificador como removido. As duas estratégias de identificação de pontes implementam a interface \texttt{DetectorPontes}, com os métodos \texttt{ehPonte}, que responde sobre uma aresta, e \texttt{encontrarPontes}, que devolve todas as pontes. O algoritmo de Fleury recebe um objeto dessa interface e, portanto, é o mesmo código nas duas estratégias.
+
+\subsection{Método de Tarjan}
+
+O método de Tarjan~\cite{tarjan1974} encontra todas as pontes com uma única busca em profundidade (DFS). Para cada vértice $v$ são guardados dois valores:
+
+\begin{itemize}
+  \item $descoberta[v]$: o momento em que a busca chegou em $v$;
+  \item $low[v]$: o menor tempo de descoberta que se alcança a partir da subárvore de $v$, usando no máximo uma aresta de retorno.
+\end{itemize}
+
+Quando a busca termina os vizinhos de $v$, o valor $low[v]$ está pronto e é repassado ao pai $u$. A aresta $\{u, v\}$ da árvore é ponte se, e somente se,
+\[
+  low[v] > descoberta[u],
+\]
+pois essa condição significa que nenhum vértice da subárvore de $v$ consegue voltar até $u$ ou até um ancestral dele sem passar pela própria aresta $\{u, v\}$.
+
+A busca é iterativa. Em um grafo de 100.000 vértices, a profundidade da DFS pode chegar a 100.000 chamadas, o que causaria \texttt{StackOverflowError} em uma versão recursiva. Por isso, a implementação usa um vetor como pilha e um vetor \texttt{cursor}, que guarda para cada vértice a próxima posição a ser lida da sua lista de adjacência. Assim, ao voltar para um vértice, a busca continua de onde parou. Para não voltar ao pai pela mesma aresta, cada vértice guarda o identificador da aresta que o descobriu.
+
+Os vetores são alocados uma única vez. Em vez de zerar os visitados a cada busca, cada busca usa um número novo, e $v$ está visitado quando $marca[v]$ é igual ao número da busca atual.
+
+O método \texttt{encontrarPontes} inicia uma DFS em cada vértice ainda não visitado e custa $O(V + E)$. Já o método \texttt{ehPonte} faz uma DFS a partir de uma das pontas da aresta $\{u, v\}$, percorrendo a componente inteira. Com a raiz em $u$, a aresta é ponte somente se $v$ foi descoberto por ela e $low[v] > descoberta[u]$; se $v$ foi descoberto por outro caminho, ela fecha um ciclo. O custo de cada chamada é $O(V + E)$.
+
+\subsection{Verificação euleriana}
+
+Um grafo possui caminho euleriano somente se todas as suas arestas estão na mesma componente conexa. Vértices sem arestas são ignorados, pois não precisam ser visitados pelo caminho. Atendida essa condição, a classificação depende da quantidade de vértices de grau ímpar:
+
+\begin{itemize}
+  \item nenhum: o grafo é euleriano;
+  \item exatamente dois: o grafo é semi-euleriano;
+  \item mais de dois: não existe caminho euleriano.
+\end{itemize}
+
+A conectividade é testada com uma busca em largura e os graus já estão armazenados, o que resulta em $O(V + E)$.
+
+\subsection{Algoritmo de Fleury}
+
+Se o caminho existe, o algoritmo começa em um vértice de grau ímpar, caso o grafo seja semi-euleriano, ou em qualquer vértice com arestas, caso seja euleriano. A cada passo, ele escolhe uma aresta do vértice atual, atravessa e remove essa aresta. A escolha segue duas regras:
+
+\begin{enumerate}
+  \item se o vértice atual tem apenas uma aresta, ela é usada sem nenhum teste, pois é a única opção;
+  \item caso contrário, as arestas são testadas com \texttt{ehPonte} até aparecer uma que não seja ponte.
+\end{enumerate}
+
+Ao final, as arestas usadas são restauradas, deixando o grafo como estava. Dessa forma, o mesmo grafo pode ser usado nas execuções seguintes dos experimentos.
+
+\paragraph{Número de testes por passo.} Cada passo faz no máximo dois testes de ponte, pois o vértice atual $x$ tem no máximo uma ponte incidente quando existe mais de uma opção. Se o grafo restante é euleriano, ele não tem pontes, já que toda aresta está em um ciclo. Se é semi-euleriano, $x$ é um dos vértices ímpares; seja $y$ o outro. Ao remover uma ponte $\{x, w\}$, o lado de $w$ precisa ter uma quantidade par de vértices ímpares, o que só é possível se $y$ estiver nesse lado. Como os lados opostos a $x$ de duas pontes diferentes são disjuntos, e $y$ só pode estar em um deles, $x$ tem no máximo uma ponte. Esse limite também foi conferido nos testes da implementação.
+
+\subsection{Complexidade}
+
+O caminho tem $E$ passos, com no máximo dois testes em cada um. Como um teste custa $O(V + E)$ nas duas estratégias, o algoritmo de Fleury custa $O(E \cdot (V + E))$ tanto com o método ingênuo quanto com o método de Tarjan. O percurso pelas listas de adjacência em cada passo custa no máximo $O(V)$ e não altera esse resultado. A Tabela~\ref{tab:complexidade} resume os custos.
+
+\begin{table}[ht]
+  \centering
+  \caption{Complexidade de tempo no pior caso.}
+  \label{tab:complexidade}
+  \begin{tabular}{lcc}
+    \hline
+    Operação & Ingênuo & Tarjan \\
+    \hline
+    Testar uma aresta (\texttt{ehPonte}) & $O(V + E)$ & $O(V + E)$ \\
+    Encontrar todas as pontes & $O(E \cdot (V + E))$ & $O(V + E)$ \\
+    Fleury & $O(E \cdot (V + E))$ & $O(E \cdot (V + E))$ \\
+    \hline
+  \end{tabular}
+\end{table}
+
+A vantagem assintótica do método de Tarjan aparece ao procurar todas as pontes de uma vez, mas não se mantém dentro do Fleury. Como o grafo muda a cada passo, as pontes calculadas em um passo deixam de valer no seguinte e uma nova DFS é necessária. Além disso, o teste ingênuo interrompe a busca assim que encontra a outra ponta da aresta, enquanto o método de Tarjan percorre toda a componente. Por isso, a diferença entre as estratégias no Fleury depende das constantes, e não da ordem de crescimento, sendo possível que o método ingênuo seja mais rápido na prática.
+
+O uso de memória é $O(V + E)$ nas duas estratégias, pois todos os vetores auxiliares têm tamanho proporcional a $V$ ou a $E$.

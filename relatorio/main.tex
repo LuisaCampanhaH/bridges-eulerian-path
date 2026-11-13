@@ -1,0 +1,32 @@
+% Arquivo principal do relatorio. Para usar o template compartilhado do grupo,
+% basta copiar os \input das secoes e os pacotes abaixo para ele.
+% Os graficos leem os CSVs de dados/ (copiados de ../resultados/ apos os experimentos).
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{hyperref}
+
+\title{Trabalho Prático 01\\Pontes e Caminhos Eulerianos}
+\author{Integrante A \and Integrante B \and Integrante C}
+\date{Teoria dos Grafos e Computabilidade --- PUC Minas}
+
+\begin{document}
+\maketitle
+
+\input{introducao}
+\input{implementacao}
+\input{experimentos}
+\input{conclusao}
+
+\bibliographystyle{plain}
+\bibliography{referencias}
+
+\end{document}
